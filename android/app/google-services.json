@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "566599100108",
+    "project_id": "ubcab-app",
+    "storage_bucket": "ubcab-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566599100108:android:e61aa5b3febaec2d168469",
+        "android_client_info": {
+          "package_name": "com.example.rider_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBT1NJrVOaj_zKzC0FYa1r_oohLKms0_84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
