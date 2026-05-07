@@ -5,7 +5,10 @@ import 'package:rider_app/features/location/logic/location_controller.dart';
 class LocationBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => LocationApi());
-    Get.lazyPut(() => LocationController(locationApi: Get.find<LocationApi>()));
+    Get.lazyPut(() => LocationApi(), fenix: true);
+    Get.lazyPut(
+      () => LocationController(locationApi: Get.find<LocationApi>()),
+      fenix: true,
+    );
   }
 }

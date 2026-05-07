@@ -39,6 +39,14 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RideNow needs your location to show the map and find nearby drivers.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>RideNow needs your location to show the map and find nearby drivers.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>RideNow needs your location to show the map and find nearby drivers.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>RideNow needs your location to show the map and find nearby drivers.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

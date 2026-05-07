@@ -1,3 +1,4 @@
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationApi {
@@ -22,5 +23,24 @@ class LocationApi {
         accuracy: LocationAccuracy.high,
       ),
     );
+  }
+
+  /// Coordinate-aas hayag avah (reverse geocoding).
+
+  Future<String?> reverseGeocode(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return null;
+      final p = placemarks.first;
+      final parts = <String>[
+        if ((p.street ?? '').isNotEmpty) p.street!,
+        if ((p.subLocality ?? '').isNotEmpty) p.subLocality!,
+        if ((p.locality ?? '').isNotEmpty) p.locality!,
+        if ((p.administrativeArea ?? '').isNotEmpty) p.administrativeArea!,
+      ];
+      return parts.isEmpty ? null : parts.join(', ');
+    } catch (_) {
+      return null;
+    }
   }
 }

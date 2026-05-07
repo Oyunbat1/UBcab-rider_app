@@ -15,11 +15,11 @@ class FareEstimateCard extends StatelessWidget {
     required this.pickupAddress,
     required this.dropoffAddress,
     required this.fare,
-    required this.distance,
-    required this.eta,
-    required this.onRequestRide,
-    this.isLoading = false,
-  });
+      required this.distance,
+      required this.eta,
+      required this.onRequestRide,
+      this.isLoading = false,
+    });
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +33,13 @@ class FareEstimateCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle
+
           Container(
             width: 36, height: 4,
             decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 14),
-          // Route
+
           Row(
             children: [
               const Icon(Icons.circle, size: 8, color: AppTheme.primaryColor),
@@ -59,7 +59,7 @@ class FareEstimateCard extends StatelessWidget {
             ],
           ),
           const Divider(height: 24),
-          // Ride type
+
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -86,7 +86,7 @@ class FareEstimateCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          // Payment
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -95,7 +95,7 @@ class FareEstimateCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Request button
+
           ElevatedButton(
             onPressed: isLoading ? null : onRequestRide,
             child: isLoading

@@ -4,6 +4,8 @@ import 'package:rider_app/features/auth/logic/auth_binding.dart';
 import 'package:rider_app/features/auth/view/splash_view.dart';
 import 'package:rider_app/features/auth/view/login_view.dart';
 import 'package:rider_app/features/auth/view/otp_view.dart';
+import 'package:rider_app/features/location/logic/location_binding.dart';
+import 'package:rider_app/features/location/view/location_picker_view.dart';
 import 'package:rider_app/features/trip/logic/trip_binding.dart';
 import 'package:rider_app/features/trip/view/map_view.dart';
 import 'package:rider_app/features/trip/view/trip_active_view.dart';
@@ -29,7 +31,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.home,
       page: () => const MapView(),
-      binding: TripBinding(),
+      bindings: [TripBinding(), LocationBinding()],
+    ),
+    GetPage(
+      name: AppRoutes.pickLocation,
+      page: () => const LocationPickerView(),
+      bindings: [LocationBinding()],
     ),
     GetPage(
       name: AppRoutes.tripActive,

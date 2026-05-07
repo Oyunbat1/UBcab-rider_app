@@ -23,6 +23,7 @@ class ProfileController extends GetxController {
     if (data != null) {
       state.name.value = data['name'] ?? '';
       state.phone.value = data['phone'] ?? '';
+      state.photoUrl.value = data['photoUrl'] ?? '';
       state.rating.value = (data['rating'] ?? 0).toDouble();
       state.totalTrips.value = data['totalTrips'] ?? 0;
       state.totalSpent.value = data['totalSpent'] ?? 0;

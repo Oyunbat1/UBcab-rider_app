@@ -25,7 +25,7 @@ class OtpView extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => Get.back(),
                   child: const Text(
-                    '← Back',
+                    '← Буцаx',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,

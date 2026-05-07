@@ -94,7 +94,7 @@ class ProfileView extends StatelessWidget {
               onPressed: () {
                 Get.find<AuthController>().signOut();
               },
-              child: const Text('Log Out'),
+              child: const Text('Системээс гарах'),
             ),
             const SizedBox(height: 24),
           ],

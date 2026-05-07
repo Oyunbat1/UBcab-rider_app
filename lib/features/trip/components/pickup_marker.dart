@@ -47,7 +47,6 @@ class _TrianglePainter extends CustomPainter {
       ..close();
     canvas.drawPath(path, paint);
   }
-
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

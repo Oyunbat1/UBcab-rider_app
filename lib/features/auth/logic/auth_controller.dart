@@ -33,7 +33,7 @@ class AuthController extends GetxController {
 
     state.isLoading.value = true;
 
-    final fullPhone = phone.startsWith('+') ? phone : '+976$phone';
+    final fullPhone = phone.startsWith('+976') ? phone : '+976$phone';
 
     await authApi.sendOtp(
       phone: fullPhone,

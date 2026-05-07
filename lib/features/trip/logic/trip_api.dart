@@ -12,6 +12,8 @@ class TripApi {
     required GeoPoint pickup,
     required GeoPoint dropoff,
     required int fare,
+    String? pickupAddress,
+    String? dropoffAddress,
   }) async {
     final doc = await _firestore
         .collection(FirebaseConstants.tripsCollection)
@@ -21,15 +23,16 @@ class TripApi {
       'status': 'requested',
       'pickup': pickup,
       'dropoff': dropoff,
+      'pickupAddress': pickupAddress ?? '',
+      'dropoffAddress': dropoffAddress ?? '',
       'fare': fare,
       'createdAt': FieldValue.serverTimestamp(),
     });
     return doc.id;
   }
 
-  /// Rider listens for real-time changes on their trip document
-  /// When driver accepts: driverId gets set and status changes to 'accepted'
-  /// This stream omatically via Firefires autstore's onSnapshot
+  /// Rider trip document real time sonson driver accept hiih vuy accepted bolj uurchlugduh heseg
+
   Stream<DocumentSnapshot> watchTrip(String tripId) {
     return _firestore
         .collection(FirebaseConstants.tripsCollection)
@@ -37,7 +40,16 @@ class TripApi {
         .snapshots();
   }
 
-  /// Cancel a trip request
+  /// User doc-iig 1 udaa unshich driver-iin medeelliig avah heseg.
+  Future<Map<String, dynamic>?> getUserDoc(String uid) async {
+    final doc = await _firestore
+        .collection(FirebaseConstants.usersCollection)
+        .doc(uid)
+        .get();
+    return doc.data();
+  }
+
+  /// Trip request tsutslah heseg
   Future<void> cancelTrip(String tripId) async {
     await _firestore
         .collection(FirebaseConstants.tripsCollection)
