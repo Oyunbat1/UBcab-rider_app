@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:rider_app/core/theme/app_theme.dart';
+import 'package:rider_app/core/services/directions_service.dart';
 import 'package:rider_app/features/location/logic/location_controller.dart';
 import 'package:rider_app/features/trip/suite/trip_suite.dart';
 
@@ -33,10 +34,36 @@ class _RiderTripMapState extends State<RiderTripMap> {
   GoogleMapController? _mapController;
   bool _initialized = false;
 
+  /// Бодит замыг (road route) Directions API-аар татна.
+  final _directions = DirectionsService();
+  final _routePoints = <LatLng>[].obs;
+  String? _routeKey;
+
   @override
   void dispose() {
     _mapController?.dispose();
     super.dispose();
+  }
+
+  /// Шаардлагатай үед замыг шинээр татна (origin ~110м хөдөлсөн эсвэл segment
+  /// солигдсон үед). Ингэснээр Directions дуудлага хэт олон явахгүй.
+  void _maybeFetchRoute(LatLng origin, LatLng dest, String segId) {
+    final key = '$segId:'
+        '${origin.latitude.toStringAsFixed(3)},${origin.longitude.toStringAsFixed(3)}'
+        '->${dest.latitude.toStringAsFixed(4)},${dest.longitude.toStringAsFixed(4)}';
+    if (key == _routeKey) return;
+    _routeKey = key;
+
+    _directions.getRoute(origin, dest).then((route) {
+      if (!mounted) return;
+      if (key != _routeKey) return;
+      _routePoints.assignAll(route?.points ?? const []);
+    });
+  }
+
+  void _clearRoute() {
+    _routeKey = null;
+    if (_routePoints.isNotEmpty) _routePoints.clear();
   }
 
   Future<void> _animateBoundsToFit(List<LatLng> points) async {
@@ -111,7 +138,7 @@ class _RiderTripMapState extends State<RiderTripMap> {
           icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueAzure),
           infoWindow: InfoWindow(
-            title: 'Pickup',
+            title: 'Авах цэг',
             snippet: trip?['pickupAddress'] as String?,
           ),
         ),
@@ -124,7 +151,7 @@ class _RiderTripMapState extends State<RiderTripMap> {
             icon:
                 BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: InfoWindow(
-              title: 'Dropoff',
+              title: 'Буух цэг',
               snippet: trip?['dropoffAddress'] as String?,
             ),
           ),
@@ -137,33 +164,56 @@ class _RiderTripMapState extends State<RiderTripMap> {
             position: driver,
             icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueGreen),
-            infoWindow: const InfoWindow(title: 'Driver'),
+            infoWindow: const InfoWindow(title: 'Жолооч'),
           ),
         );
       }
 
-      // Polyline
-      final polylines = <Polyline>{};
+      // Идэвхтэй segment-ийг тодорхойлж бодит замыг (road route) зурна.
+      // accepted -> жолооч → авах цэг, inProgress -> жолооч → буух цэг.
+      LatLng? segOrigin;
+      LatLng? segDest;
+      String? segId;
+      Color segColor = AppTheme.primaryColor;
       if (driver != null && status == TripStatus.accepted) {
-        polylines.add(
-          Polyline(
-            polylineId: const PolylineId('driver-to-pickup'),
-            points: [driver, pickup],
-            color: AppTheme.primaryColor,
-            width: 4,
-            geodesic: true,
-          ),
-        );
+        segOrigin = driver;
+        segDest = pickup;
+        segId = 'to-pickup';
+        segColor = AppTheme.primaryColor;
       } else if (driver != null &&
           status == TripStatus.inProgress &&
           dropoff != null) {
+        segOrigin = driver;
+        segDest = dropoff;
+        segId = 'to-dropoff';
+        segColor = Colors.red.shade600;
+      }
+
+      // Build хийх явцад Rx-ийг мутац хийхгүйн тулд frame-ийн дараа товлоно.
+      final origin = segOrigin;
+      final dest = segDest;
+      final id = segId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (origin == null || dest == null || id == null) {
+          _clearRoute();
+        } else {
+          _maybeFetchRoute(origin, dest, id);
+        }
+      });
+
+      final polylines = <Polyline>{};
+      if (segOrigin != null && segDest != null && segId != null) {
+        // Road route ирсэн бол түүгээр, эс бол шулуун шугам fallback.
+        final points = _routePoints.isNotEmpty
+            ? _routePoints.toList()
+            : [segOrigin, segDest];
         polylines.add(
           Polyline(
-            polylineId: const PolylineId('driver-to-dropoff'),
-            points: [driver, dropoff],
-            color: Colors.red.shade600,
+            polylineId: PolylineId(segId),
+            points: points,
+            color: segColor,
             width: 4,
-            geodesic: true,
           ),
         );
       }

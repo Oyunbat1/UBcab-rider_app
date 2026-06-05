@@ -47,7 +47,7 @@ class OtpView extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Verification Code',
+                'Баталгаажуулах код',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -87,7 +87,7 @@ class OtpView extends StatelessWidget {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text('Verify'),
+                        : const Text('Баталгаажуулах'),
                   )),
             ],
           ),

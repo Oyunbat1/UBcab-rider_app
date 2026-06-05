@@ -20,7 +20,7 @@ class AddressSearchBar extends StatelessWidget {
             Icon(Icons.search, size: 18, color: Color(0xFF999999)),
             SizedBox(width: 10),
             Text(
-              'Where to?',
+              'Хаашаа явах вэ?',
               style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
             ),
           ],

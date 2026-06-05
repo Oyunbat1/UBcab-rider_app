@@ -14,7 +14,11 @@ class TripController extends GetxController {
 
   StreamSubscription? _tripSubscription;
   Timer? _elapsedTimer;
+  Timer? _searchTimeoutTimer;
   String? _lastSeenStatus;
+
+  /// Jolooch hailtын ms hugatsaa - eneees udval request automataar tsutslana
+  static const Duration searchTimeout = Duration(seconds: 30);
 
   TripController({required this.tripApi});
 
@@ -35,27 +39,81 @@ class TripController extends GetxController {
 
     _audio.playRequest();
 
+    // UI shууd hariu uguhiin tuld "Jolooch hailj baina..." tuluviig await-aas UMNU
+    // onooно. Ingesneer Firestore bichilt duusahiig huleelgui darhad л haruulna.
     state.isRequesting.value = true;
+    _lastSeenStatus = 'requested';
+    state.tripStatus.value = TripStatus.requested;
 
-    final tripId = await tripApi.createTrip(
-      riderId: uid,
-      pickup: pickup,
-      dropoff: dropoff,
-      fare: fare,
-      pickupAddress: pickupAddress,
-      dropoffAddress: dropoffAddress,
-    );
+    // Timeout-iig мөн darhad ehluulne - hugatsaa товшилтоос tooлогдоно.
+    _startSearchTimeout();
+
+    final String tripId;
+    try {
+      tripId = await tripApi.createTrip(
+        riderId: uid,
+        pickup: pickup,
+        dropoff: dropoff,
+        fare: fare,
+        pickupAddress: pickupAddress,
+        dropoffAddress: dropoffAddress,
+      );
+    } catch (e) {
+      // Bичилт amjiltgui bol tuluviig butsааж resetлэнэ.
+      state.isRequesting.value = false;
+      _resetTrip();
+      Get.snackbar('Алдаа', 'Унаа дуудаж чадсангүй: $e');
+      return;
+    }
 
     state.activeTripId.value = tripId;
-    state.tripStatus.value = TripStatus.requested;
     state.isRequesting.value = false;
-    _lastSeenStatus = 'requested';
 
     _tripSubscription = tripApi.watchTrip(tripId).listen(_onTripSnapshot);
   }
 
+  /// Jolooch hailtын timeout ehluuleh
+  void _startSearchTimeout() {
+    _searchTimeoutTimer?.cancel();
+    _searchTimeoutTimer = Timer(searchTimeout, _onSearchTimedOut);
+  }
+
+  /// Hugatsaa duusahad hesvel jolooch hailj amjaagui gesen үг.
+  /// Trip-iig tsutslaad reset hiideg - ingesneer rider дахин shine request ilgeej chadna.
+  Future<void> _onSearchTimedOut() async {
+    // Hervee enэ zuur jolooch ali hediin hүleen avsan bol yuu ch hiihgui.
+    if (state.tripStatus.value != TripStatus.requested) return;
+
+    final tripId = state.activeTripId.value;
+    if (tripId != null) {
+      await tripApi.cancelTrip(tripId);
+    }
+
+    _resetTrip();
+
+    Get.snackbar(
+      'Жолооч олдсонгүй',
+      'Одоогоор завтай жолооч байхгүй байна. Дахин оролдоно уу.',
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 4),
+      backgroundColor: AppTheme.primaryColor,
+      colorText: Colors.white,
+      icon: const Icon(Icons.access_time, color: Colors.white),
+      margin: const EdgeInsets.all(12),
+      borderRadius: 12,
+    );
+  }
+
   void _onTripSnapshot(DocumentSnapshot snapshot) {
-    if (!snapshot.exists) return;
+    // Trip doc устсан бол aylal дуусгаваргүй болсон гэж үзээд reset hийгээд
+    // home ruu butsana - эс бол rider дэлгэц дээр гацна.
+    if (!snapshot.exists) {
+      _resetTrip();
+      if (Get.currentRoute == AppRoutes.tripActive) {
+        Get.offAllNamed(AppRoutes.home);
+      }
+      return;
+    }
 
     final data = snapshot.data() as Map<String, dynamic>;
     state.activeTrip.value = data;
@@ -88,33 +146,48 @@ class TripController extends GetxController {
   }
 
   Future<void> _onAccepted(Map<String, dynamic> data) async {
+    // Jolooch olдson tul hailtын timeout-iig zogsooно.
+    _searchTimeoutTimer?.cancel();
+    _searchTimeoutTimer = null;
+
     state.tripStatus.value = TripStatus.accepted;
     _audio.playDriverFound();
-
-    final driverId = data['driverId'] as String?;
-    if (driverId != null) {
-      final driverDoc = await tripApi.getUserDoc(driverId);
-      if (driverDoc != null) {
-        state.driverName.value =
-            (driverDoc['name'] as String?)?.trim().isNotEmpty == true
-                ? driverDoc['name']
-                : 'Driver';
-        state.driverPhone.value = driverDoc['phone'] ?? '';
-        state.driverVehicle.value = driverDoc['vehicle'] ?? 'Toyota Prius';
-        state.driverPlate.value = driverDoc['plate'] ?? 'УБ 1234';
-        state.driverRating.value = (driverDoc['rating'] ?? 4.8).toDouble();
-      }
-    }
-
 
     final ts = data['acceptedAt'];
     final accepted = ts is Timestamp ? ts.toDate() : DateTime.now();
     state.acceptedAt.value = accepted;
     _startElapsedTimer();
 
+    // Tripactive дэлгэц рүү shууd shiljine - driver-iin medeelel унших нь
+    // navigation-iig haahaar BISH. Doc unshilt амжилтгүй boloвч rider duudlagaа
+    // алдахгүй (defense-in-depth).
+    if (Get.currentRoute != AppRoutes.tripActive) {
+      Get.toNamed(AppRoutes.tripActive);
+    }
+
+    final driverId = data['driverId'] as String?;
+    if (driverId != null) {
+      try {
+        final driverDoc = await tripApi.getUserDoc(driverId);
+        if (driverDoc != null) {
+          state.driverName.value =
+              (driverDoc['name'] as String?)?.trim().isNotEmpty == true
+                  ? driverDoc['name']
+                  : 'Жолооч';
+          state.driverPhone.value = driverDoc['phone'] ?? '';
+          state.driverVehicle.value = driverDoc['vehicle'] ?? 'Toyota Prius';
+          state.driverPlate.value = driverDoc['plate'] ?? 'УБ 1234';
+          state.driverRating.value = (driverDoc['rating'] ?? 4.8).toDouble();
+        }
+      } catch (_) {
+        // Driver doc unshij chadahgui bol default утгаар үлдэнэ.
+        if (state.driverName.value.isEmpty) state.driverName.value = 'Жолооч';
+      }
+    }
+
     Get.snackbar(
-      'Driver olloo',
-      '${state.driverName.value} tani olj ireh ywaa',
+      'Жолооч олдлоо',
+      '${state.driverName.value} тань руу ирж явна',
       snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 4),
       backgroundColor: AppTheme.primaryColor,
@@ -123,11 +196,6 @@ class TripController extends GetxController {
       margin: const EdgeInsets.all(12),
       borderRadius: 12,
     );
-
-
-    if (Get.currentRoute != AppRoutes.tripActive) {
-      Get.toNamed(AppRoutes.tripActive);
-    }
   }
 
   void _onArriving() {
@@ -148,8 +216,8 @@ class TripController extends GetxController {
 
     final fare = (data['fare'] as num?)?.toInt() ?? 0;
     Get.snackbar(
-      'Aylal duuslaa',
-      '₮ ${_formatCurrency(fare)} tulburtei. Bayrlalaa!',
+      'Аялал дууслаа',
+      '₮ ${_formatCurrency(fare)} төлбөртэй. Баярлалаа!',
       snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 5),
       backgroundColor: AppTheme.primaryColor,
@@ -168,7 +236,7 @@ class TripController extends GetxController {
     _stopElapsedTimer();
     if (previous != 'requested') {
       Get.snackbar(
-        'Aylal tsutslagdlaa...',
+        'Аялал цуцлагдлаа...',
         '',
         snackPosition: SnackPosition.TOP,
       );
@@ -223,6 +291,8 @@ class TripController extends GetxController {
   void _resetTrip() {
     _tripSubscription?.cancel();
     _tripSubscription = null;
+    _searchTimeoutTimer?.cancel();
+    _searchTimeoutTimer = null;
     _stopElapsedTimer();
     state.activeTripId.value = null;
     state.activeTrip.value = null;
@@ -241,6 +311,7 @@ class TripController extends GetxController {
   @override
   void onClose() {
     _tripSubscription?.cancel();
+    _searchTimeoutTimer?.cancel();
     _stopElapsedTimer();
     super.onClose();
   }

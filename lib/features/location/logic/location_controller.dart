@@ -31,8 +31,8 @@ class LocationController extends GetxController {
       final hasPermission = await locationApi.checkAndRequestPermission();
       if (!hasPermission) {
         Get.snackbar(
-          'Permission',
-          'Location permission is required. Please enable it in settings.',
+          'Зөвшөөрөл',
+          'Байршлын зөвшөөрөл шаардлагатай. Тохиргооноос идэвхжүүлнэ үү.',
         );
         return;
       }
@@ -49,7 +49,7 @@ class LocationController extends GetxController {
         state.currentAddress.value = address;
       }
     } catch (e) {
-      Get.snackbar('Location Error', e.toString());
+      Get.snackbar('Байршлын алдаа', e.toString());
     } finally {
       state.isLoading.value = false;
     }

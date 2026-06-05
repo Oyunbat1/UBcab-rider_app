@@ -73,9 +73,9 @@ class FareEstimateCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Standard', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    const Text('Энгийн', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 3),
-                    Text('$eta away - $distance', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                    Text('$eta · $distance', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                   ],
                 ),
                 Text(
@@ -90,8 +90,8 @@ class FareEstimateCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Cash payment', style: TextStyle(fontSize: 13, color: Color(0xFF666666))),
-              Text('Change >', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.primaryColor)),
+              const Text('Бэлэн төлбөр', style: TextStyle(fontSize: 13, color: Color(0xFF666666))),
+              Text('Өөрчлөх >', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.primaryColor)),
             ],
           ),
           const SizedBox(height: 12),
@@ -100,7 +100,7 @@ class FareEstimateCard extends StatelessWidget {
             onPressed: isLoading ? null : onRequestRide,
             child: isLoading
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('Request Ride'),
+                : const Text('Унаа дуудах'),
           ),
         ],
       ),

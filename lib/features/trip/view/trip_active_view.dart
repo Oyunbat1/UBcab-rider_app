@@ -83,7 +83,7 @@ class TripActiveView extends StatelessWidget {
                                 children: [
                                   Text(
                                     controller.state.driverName.value.isEmpty
-                                        ? 'Driver'
+                                        ? 'Жолооч'
                                         : controller.state.driverName.value,
                                     style: const TextStyle(
                                         fontSize: 15,
@@ -128,7 +128,7 @@ class TripActiveView extends StatelessWidget {
                             (trip['pickupAddress'] as String?)?.isNotEmpty ==
                                     true
                                 ? trip['pickupAddress']
-                                : 'Pickup location',
+                                : 'Авах байршил',
                             style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade700),
@@ -147,7 +147,7 @@ class TripActiveView extends StatelessWidget {
                             (trip['dropoffAddress'] as String?)?.isNotEmpty ==
                                     true
                                 ? trip['dropoffAddress']
-                                : 'Dropoff location',
+                                : 'Буух байршил',
                             style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade700),

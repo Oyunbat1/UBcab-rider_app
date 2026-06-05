@@ -27,7 +27,7 @@ class DriverProfileSheet extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       child: Obx(() {
         final name = controller.state.driverName.value.isEmpty
-            ? 'Driver'
+            ? 'Жолооч'
             : controller.state.driverName.value;
         final phone = controller.state.driverPhone.value;
         final rating = controller.state.driverRating.value;
@@ -73,9 +73,9 @@ class DriverProfileSheet extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _stat('${rating.toStringAsFixed(1)} ⭐', 'Rating'),
-                  _stat(vehicle.isEmpty ? '—' : vehicle, 'Vehicle'),
-                  _stat(plate.isEmpty ? '—' : plate, 'Plate'),
+                  _stat('${rating.toStringAsFixed(1)} ⭐', 'Үнэлгээ'),
+                  _stat(vehicle.isEmpty ? '—' : vehicle, 'Машин'),
+                  _stat(plate.isEmpty ? '—' : plate, 'Улсын дугаар'),
                 ],
               ),
             ),
@@ -88,20 +88,20 @@ class DriverProfileSheet extends StatelessWidget {
                         ? null
                         : () {
                             Get.snackbar(
-                              'Call',
+                              'Залгах',
                               'Dialing $phone (placeholder)',
                               snackPosition: SnackPosition.TOP,
                             );
                           },
                     icon: const Icon(Icons.call, size: 16),
-                    label: const Text('Call'),
+                    label: const Text('Залгах'),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Get.back(),
-                    child: const Text('Close'),
+                    child: const Text('Хаах'),
                   ),
                 ),
               ],

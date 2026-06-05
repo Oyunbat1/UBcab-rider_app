@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:rider_app/app/routes/app_routes.dart';
 import 'package:rider_app/features/auth/state/auth_state.dart';
@@ -44,7 +45,7 @@ class AuthController extends GetxController {
       },
       onError: (error) {
         state.isLoading.value = false;
-        Get.snackbar('Error', error);
+        Get.snackbar('Алдаа', error);
       },
     );
   }
@@ -56,26 +57,36 @@ class AuthController extends GetxController {
 
     state.isLoading.value = true;
 
+    // Aldaag salgaj barina: OTP buruu yu, esvel Firestore bichilt aldsan yu?
+    // Negen catch-d hamtad nь barival Firestore aldaag "Invalid OTP" gej buruu zaana.
+    final UserCredential result;
     try {
-      final result = await authApi.verifyOtp(
+      result = await authApi.verifyOtp(
         verificationId: state.verificationId.value,
         otpCode: code,
       );
+    } catch (e) {
+      state.isLoading.value = false;
+      Get.snackbar('Алдаа', 'OTP код буруу байна');
+      return;
+    }
 
-     // hereglegchin medeelel doc-d hadgalah
+    // OTP zov batalgaajsan - newterсэн. Doc hadgalah aldaa newteltiig taslahgui.
+    try {
       await authApi.saveUserDoc(
         uid: result.user!.uid,
         phone: result.user!.phoneNumber ?? '',
       );
-
-      state.currentUser.value = result.user;
-      state.isLoading.value = false;
-
-      Get.offAllNamed(AppRoutes.home);
     } catch (e) {
-      state.isLoading.value = false;
-      Get.snackbar('Error', 'Invalid OTP code');
+      // Firestore rules zugeer bol enэ ajillana; aldaa garval log haruulna gevch
+      // hereglegchiig newtersenii daraa home ruu oruulna.
+      Get.snackbar('Анхаар', 'Профайл хадгалж чадсангүй: $e');
     }
+
+    state.currentUser.value = result.user;
+    state.isLoading.value = false;
+
+    Get.offAllNamed(AppRoutes.home);
   }
 
   Future<void> signOut() async {

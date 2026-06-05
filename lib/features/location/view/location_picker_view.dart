@@ -24,6 +24,16 @@ class _LocationPickerViewState extends State<LocationPickerView> {
   bool _isSearching = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Picker daxin neegded omnoh songoltын stale state ustgana.
+    // Esvelis hoyor dahy neehed homoh destination buцааж "pin" hodloхgui.
+    final controller = Get.find<LocationController>();
+    controller.state.pickedLatLng.value = null;
+    controller.state.pickedAddress.value = '';
+  }
+
+  @override
   void dispose() {
     _mapController?.dispose();
     _searchController.dispose();
@@ -39,7 +49,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
     try {
       final results = await locationFromAddress(q);
       if (results.isEmpty) {
-        Get.snackbar('Search', 'Could not find: $q');
+        Get.snackbar('Хайлт', 'Олдсонгүй: $q');
         return;
       }
       final first = results.first;
@@ -50,7 +60,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
       );
 
     } catch (e) {
-      Get.snackbar('Search Error', e.toString());
+      Get.snackbar('Хайлтын алдаа', e.toString());
     } finally {
       if (mounted) setState(() => _isSearching = false);
     }
@@ -70,7 +80,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
           onPressed: () => Get.back(),
         ),
         title: const Text(
-          'Pick destination',
+          'Очих газраа сонгох',
           style: TextStyle(
             color: AppTheme.textPrimary,
             fontSize: 16,
@@ -92,11 +102,11 @@ class _LocationPickerViewState extends State<LocationPickerView> {
                   const Icon(Icons.location_off,
                       size: 48, color: AppTheme.textTertiary),
                   const SizedBox(height: 12),
-                  const Text('Could not get your location'),
+                  const Text('Таны байршлыг тогтоож чадсангүй'),
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: controller.getCurrentLocation,
-                    child: const Text('Try again'),
+                    child: const Text('Дахин оролдох'),
                   ),
                 ],
               ],
@@ -211,7 +221,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
                 textInputAction: TextInputAction.search,
                 onSubmitted: _searchAddress,
                 decoration: const InputDecoration(
-                  hintText: 'Search address (e.g. Sukhbaatar Square)',
+                  hintText: 'Хаяг хайх (ж: Сүхбаатарын талбай)',
                   border: InputBorder.none,
                   isDense: true,
                 ),
@@ -283,7 +293,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Loading address...',
+                          'Хаяг ачаалж байна...',
                           style: TextStyle(color: AppTheme.textTertiary),
                         ),
                       ],
@@ -291,7 +301,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
                   }
                   final addr = controller.state.pickedAddress.value;
                   return Text(
-                    addr.isEmpty ? 'Move map to pick a place' : addr,
+                    addr.isEmpty ? 'Газар сонгохын тулд газрын зургийг хөдөлгөнө үү' : addr,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -313,7 +323,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
                   ? () {
                       final addr = controller.state.pickedAddress.value;
                       final firstLine = addr.isEmpty
-                          ? 'Selected location'
+                          ? 'Сонгосон байршил'
                           : addr.split(',').first;
                       final rest = addr.isEmpty ? '' : addr;
                       Get.back(result: {
@@ -324,7 +334,7 @@ class _LocationPickerViewState extends State<LocationPickerView> {
                       });
                     }
                   : null,
-              child: const Text('Confirm location'),
+              child: const Text('Байршил баталгаажуулах'),
             );
           }),
         ],

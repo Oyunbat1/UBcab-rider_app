@@ -30,7 +30,7 @@ class LocationApi {
   Future<String?> reverseGeocode(double lat, double lng) async {
     try {
       final placemarks = await placemarkFromCoordinates(lat, lng);
-      if (placemarks.isEmpty) return null;
+      if (placemarks.isEmpty) return _coordFallback(lat, lng);
       final p = placemarks.first;
       final parts = <String>[
         if ((p.street ?? '').isNotEmpty) p.street!,
@@ -38,9 +38,17 @@ class LocationApi {
         if ((p.locality ?? '').isNotEmpty) p.locality!,
         if ((p.administrativeArea ?? '').isNotEmpty) p.administrativeArea!,
       ];
-      return parts.isEmpty ? null : parts.join(', ');
+      // Mongold ihevchlen hayagiin medeelel hooson baidag - tiim үед
+      // coordinate-iig haruulna, ingesneer hooson esvel aldaa garahgui.
+      return parts.isEmpty ? _coordFallback(lat, lng) : parts.join(', ');
     } catch (_) {
-      return null;
+      // NoResultFoundException g.m. geocoding aldaag залгиж coordinate butsaana.
+      return _coordFallback(lat, lng);
     }
+  }
+
+  /// Hayag oloogdoogui үед coordinate-aas унших fallback string.
+  String _coordFallback(double lat, double lng) {
+    return '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
   }
 }

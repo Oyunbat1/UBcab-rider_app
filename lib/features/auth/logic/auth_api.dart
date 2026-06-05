@@ -20,7 +20,7 @@ class AuthApi {
         await _auth.signInWithCredential(credential);
       },
       verificationFailed: (FirebaseAuthException e) {
-        onError(e.message ?? 'Verification failed');
+        onError(e.message ?? 'Баталгаажуулалт амжилтгүй');
       },
       codeSent: (String verificationId, int? resendToken) {
         onCodeSent(verificationId);

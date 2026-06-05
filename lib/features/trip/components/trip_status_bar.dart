@@ -13,17 +13,17 @@ class TripStatusBar extends StatelessWidget {
   String _title(TripStatus? status) {
     switch (status) {
       case TripStatus.requested:
-        return 'Finding your driver...';
+        return 'Жолооч хайж байна...';
       case TripStatus.accepted:
-        return 'Driver is on the way';
+        return 'Жолооч замдаа явж байна';
       case TripStatus.arriving:
-        return 'Driver has arrived';
+        return 'Жолооч ирлээ';
       case TripStatus.inProgress:
-        return 'On the way to destination';
+        return 'Очих газар луу явж байна';
       case TripStatus.completed:
-        return 'Trip completed';
+        return 'Аялал дууслаа';
       case TripStatus.cancelled:
-        return 'Trip cancelled';
+        return 'Аялал цуцлагдлаа';
       case null:
         return '';
     }
@@ -32,15 +32,15 @@ class TripStatusBar extends StatelessWidget {
   String _subtitle(TripStatus? status, String elapsed) {
     switch (status) {
       case TripStatus.requested:
-        return 'Please wait...';
+        return 'Түр хүлээнэ үү...';
       case TripStatus.accepted:
         return 'Arriving · $elapsed';
       case TripStatus.arriving:
-        return 'Please head out to the pickup point';
+        return 'Авах цэг рүү гарна уу';
       case TripStatus.inProgress:
-        return 'Enjoy your ride';
+        return 'Аялалаа сайхан өнгөрүүлээрэй';
       case TripStatus.completed:
-        return 'Thank you for riding!';
+        return 'Үйлчлүүлсэнд баярлалаа!';
       case TripStatus.cancelled:
       case null:
         return '';

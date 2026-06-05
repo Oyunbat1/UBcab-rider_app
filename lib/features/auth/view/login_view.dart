@@ -46,7 +46,7 @@ class LoginView extends StatelessWidget {
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Enter your phone number',
+                  'Утасны дугаараа оруулна уу',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -78,7 +78,7 @@ class LoginView extends StatelessWidget {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text('Continue'),
+                        : const Text('Үргэлжлүүлэх'),
                   )),
               const Spacer(),
 

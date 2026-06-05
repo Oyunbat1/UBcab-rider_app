@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Newtersen hereglegch HEN ch profil unshij bolно (rider driver-iin
+    // mashin/medeelliig, driver rider-iin medeelliig harah шаардлагатай).
+    // Bichih: zovhon uuriin doc; GEHDEE aylal duusahad нөгөө talyn totals-iig
+    // (totalEarnings/totalSpent/totalTrips) zovhon increment hiihiig zovshoorno.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && (
+        request.auth.uid == uid ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['totalEarnings', 'totalSpent', 'totalTrips'])
+      );
+      allow delete: if false;
+    }
+
+    // Newtersen hereglegch trip unshina. Rider uusgene; rider/jolooch shinechilne.
+    match /trips/{tripId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.riderId == request.auth.uid;
+      allow update: if request.auth != null;
+    }
+  }
+}

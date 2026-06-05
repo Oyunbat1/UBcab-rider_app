@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rider_app/app/routes/app_routes.dart';
 import 'package:rider_app/core/theme/app_theme.dart';
 import 'package:rider_app/core/utils/geo_utils.dart';
+import 'package:rider_app/core/services/directions_service.dart';
 import 'package:rider_app/features/location/components/address_search_bar.dart';
 import 'package:rider_app/features/location/components/current_location_button.dart';
 import 'package:rider_app/features/location/logic/location_controller.dart';
@@ -27,6 +28,9 @@ class _MapViewState extends State<MapView> {
 
   final selectedDestination = Rx<Map<String, dynamic>?>(null);
   final geocodingInProgress = false.obs;
+
+  /// Google Directions API-аар бодит замын зай/хугацааг тооцоолно.
+  final _directions = DirectionsService();
 
   @override
   void dispose() {
@@ -51,13 +55,13 @@ class _MapViewState extends State<MapView> {
       final query = '$placeTitle, $placeSubtitle';
       final locations = await locationFromAddress(query);
       if (locations.isEmpty) {
-        Get.snackbar('Error]', 'Could not find location: $query');
+        Get.snackbar('Алдаа', 'Байршил олдсонгүй: $query');
         return null;
       }
       final location = locations.first;
       return LatLng(location.latitude, location.longitude);
     } catch (e) {
-      Get.snackbar('Geocoding Error', e.toString());
+      Get.snackbar('Хайлтын алдаа', e.toString());
       return null;
     } finally {
       geocodingInProgress.value = false;
@@ -76,14 +80,36 @@ class _MapViewState extends State<MapView> {
 
     final currentPos = locationController.state.currentPosition.value;
     if (currentPos == null) {
-      Get.snackbar('Location', 'Could not get your current location');
+      Get.snackbar('Байршил', 'Таны одоогийн байршлыг тогтоож чадсангүй');
       return;
     }
 
-    final distKm = GeoUtils.distanceKm(currentPos.latitude, currentPos.longitude, destLatLng.latitude, destLatLng.longitude);
+    final origin = LatLng(currentPos.latitude, currentPos.longitude);
+
+    // Замын мэдээллийг татаж байх хооронд fare card дээр loading харуулна.
+    geocodingInProgress.value = true;
+
+    double distKm;
+    String etaMinutes;
+    List<LatLng> routePoints;
+
+    // 1) Эхлээд бодит road distance-ийг Google Directions API-аас авахыг оролдоно.
+    final route = await _directions.getRoute(origin, destLatLng);
+    if (route != null) {
+      distKm = route.distanceKm; // бодит замын зай
+      etaMinutes = route.durationMinutes.toString(); // бодит замын хугацаа
+      routePoints = route.points; // замыг дагасан polyline
+    } else {
+      // 2) Fallback: API амжилтгүй бол straight-line (Haversine) руу шилжинэ.
+      distKm = GeoUtils.distanceKm(
+          origin.latitude, origin.longitude, destLatLng.latitude, destLatLng.longitude);
+      etaMinutes = (distKm / 30 * 60).toStringAsFixed(0);
+      routePoints = [origin, destLatLng];
+    }
 
     final fare = GeoUtils.estimateFare(distKm);
-    final etaMinutes = (distKm / 30 * 60).toStringAsFixed(0);
+
+    geocodingInProgress.value = false;
 
     selectedDestination.value = {
       'title': title,
@@ -93,6 +119,7 @@ class _MapViewState extends State<MapView> {
       'distance': distKm,
       'fare': fare,
       'eta': etaMinutes,
+      'points': routePoints,
     };
 
     _animateCameraToBounds(currentPos.latitude, currentPos.longitude, destLatLng.latitude, destLatLng.longitude);
@@ -217,18 +244,25 @@ class _MapViewState extends State<MapView> {
     return markers;
   }
 
-  /// Draw polyline between pickup and dropoff
+  /// Замыг газрын зураг дээр зурна.
+  /// Directions API-аас ирсэн road polyline байвал түүгээр (замыг дагасан),
+  /// эс бол pickup→dropoff шулуун шугамаар зурна.
   Set<Polyline> _buildPolylines(dynamic currentPos) {
     final dest = selectedDestination.value;
     if (dest == null) return {};
 
+    final points = (dest['points'] as List?)?.cast<LatLng>() ??
+        [
+          LatLng(currentPos.latitude, currentPos.longitude),
+          LatLng(dest['latitude'], dest['longitude'])
+        ];
+
     return {
       Polyline(
         polylineId: const PolylineId('route'),
-        points: [LatLng(currentPos.latitude, currentPos.longitude), LatLng(dest['latitude'], dest['longitude'])],
+        points: points,
         color: AppTheme.primaryColor,
         width: 4,
-        geodesic: true,
       ),
     };
   }
@@ -239,7 +273,6 @@ class _MapViewState extends State<MapView> {
       final dest = selectedDestination.value;
       final tripStatus = tripController.state.tripStatus.value;
 
-      // If requesting ride, show loading
       if (tripStatus == TripStatus.requested) {
         return Container(
           decoration: const BoxDecoration(
@@ -269,7 +302,6 @@ class _MapViewState extends State<MapView> {
         );
       }
 
-      // If destination selected, show fare estimate
       if (dest != null) {
         final locationController = Get.find<LocationController>();
         final currentAddress = locationController.state.currentAddress.value;
@@ -286,7 +318,7 @@ class _MapViewState extends State<MapView> {
           isLoading: geocodingInProgress.value || tripController.state.isRequesting.value || !hasPickup,
           onRequestRide: () {
             if (!hasPickup) {
-              Get.snackbar('Location', 'Could not get your current location');
+              Get.snackbar('Байршил', 'Таны одоогийн байршлыг тогтоож чадсангүй');
               return;
             }
             tripController.requestTrip(
@@ -327,17 +359,18 @@ class _MapViewState extends State<MapView> {
           const SizedBox(height: 14),
           const Text('Recent places', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          _placeItem(Icons.business, 'Central Tower', 'Sukhbaatar Square, UB'),
-          _placeItem(Icons.home, 'Home', 'Bayangol district, 4th khoroo'),
-          _placeItem(Icons.school, 'National University', 'Baga toiruu, UB'),
+
+          _placeItem(Icons.business, 'Сентрал Тауэр', 'Сүхбаатарын талбай, УБ', const LatLng(47.9184, 106.9177)),
+          _placeItem(Icons.home, 'Гэр', 'Баянгол дүүрэг, 4-р хороо', const LatLng(47.9130, 106.8700)),
+          _placeItem(Icons.school, 'Үндэсний их сургууль', 'Бага тойруу, УБ', const LatLng(47.9234, 106.9183)),
         ],
       ),
     );
   }
 
-  Widget _placeItem(IconData icon, String title, String subtitle) {
+  Widget _placeItem(IconData icon, String title, String subtitle, LatLng latLng) {
     return GestureDetector(
-      onTap: () => _onDestinationSelected(title, subtitle),
+      onTap: () => _useDestinationLatLng(title, subtitle, latLng),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(

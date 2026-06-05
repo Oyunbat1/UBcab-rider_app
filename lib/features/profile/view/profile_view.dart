@@ -18,7 +18,7 @@ class ProfileView extends StatelessWidget {
         backgroundColor: AppTheme.background,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+        title: const Text('Профайл', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
           onPressed: () => Get.back(),
@@ -33,7 +33,7 @@ class ProfileView extends StatelessWidget {
             AvatarWidget(size: 64, photoUrl: controller.state.photoUrl.value),
             const SizedBox(height: 10),
             Text(
-              controller.state.name.value.isEmpty ? 'Rider' : controller.state.name.value,
+              controller.state.name.value.isEmpty ? 'Зорчигч' : controller.state.name.value,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
@@ -54,9 +54,10 @@ class ProfileView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _statItem('${controller.state.totalTrips.value}', 'Trips'),
-                  _statItem('⭐ ${controller.state.rating.value.toStringAsFixed(1)}', 'Rating'),
-                  _statItem('₮ ${(controller.state.totalSpent.value / 1000).toStringAsFixed(0)}K', 'Spent'),
+                  _statItem('${controller.state.totalTrips.value}', 'Аялал'),
+                  _statItem('⭐ ${controller.state.rating.value.toStringAsFixed(1)}', 'Үнэлгээ'),
+                  // Бодит дүнг таслалтай харуулна (1000-д хуваавал жижиг дүн "0K" болж далдрана).
+                  _statItem('₮ ${_formatMoney(controller.state.totalSpent.value)}', 'Зарцуулсан'),
                 ],
               ),
             ),
@@ -71,19 +72,19 @@ class ProfileView extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _menuItem(Icons.person, 'Edit Profile'),
+                  _menuItem(Icons.person, 'Профайл засах'),
                   _divider(),
-                  _menuItem(Icons.location_on, 'Saved Places'),
+                  _menuItem(Icons.location_on, 'Хадгалсан газрууд'),
                   _divider(),
-                  _menuItem(Icons.history, 'Ride History'),
+                  _menuItem(Icons.history, 'Аяллын түүх'),
                   _divider(),
-                  _menuItem(Icons.credit_card, 'Payment Methods'),
+                  _menuItem(Icons.credit_card, 'Төлбөрийн хэрэгсэл'),
                   _divider(),
-                  _menuItem(Icons.notifications, 'Notifications'),
+                  _menuItem(Icons.notifications, 'Мэдэгдэл'),
                   _divider(),
-                  _menuItem(Icons.settings, 'Settings'),
+                  _menuItem(Icons.settings, 'Тохиргоо'),
                   _divider(),
-                  _menuItem(Icons.help_outline, 'Help & Support'),
+                  _menuItem(Icons.help_outline, 'Тусламж & Дэмжлэг'),
                 ],
               ),
             ),
@@ -101,6 +102,12 @@ class ProfileView extends StatelessWidget {
         )),
       ),
     );
+  }
+
+  /// Мөнгөн дүнг мянгатын таслалтай болгоно (ж: 12500 -> 12,500).
+  String _formatMoney(int amount) {
+    return amount.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
   }
 
   Widget _statItem(String value, String label) {
